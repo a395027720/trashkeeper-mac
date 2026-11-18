@@ -8,6 +8,8 @@ import time
 from collections import deque
 from pathlib import Path
 
+from utilities.kinds import classify
+
 # 默认跳过的目录。/Volumes 不在其中 —— 外接盘上的文件同样是用户要找的。
 # 隐藏目录（含各卷的 .Trashes、.Spotlight 等）由 include_hidden 控制，默认已跳过。
 DEFAULT_SKIP_DIRS = {
@@ -47,7 +49,23 @@ def _describe(entry: os.DirEntry) -> dict:
         "size": size,
         "modified": modified,
         "is_dir": is_dir,
+        "kind": classify(entry.path, is_dir),
     }
+
+
+def list_directory(path: str, include_hidden: bool = False) -> list:
+    """列出某个目录下的直接子项（不递归），供前端树形浏览使用。"""
+    target = Path(path).expanduser()
+    if not target.is_dir():
+        raise NotADirectoryError(f"不是有效目录: {path}")
+    items = []
+    with os.scandir(target) as iterator:
+        for entry in iterator:
+            if not include_hidden and entry.name.startswith("."):
+                continue
+            items.append(_describe(entry))
+    items.sort(key=lambda item: (not item["is_dir"], item["name"].lower()))
+    return items
 
 
 def search_files(

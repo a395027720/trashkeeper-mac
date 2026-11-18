@@ -5,7 +5,7 @@ import webview
 from conf.setting import settings
 from utilities.log import logger
 from utilities.response import res200, res400, res500
-from utilities.search import search_files
+from utilities.search import list_directory, search_files
 
 # 搜索范围预设
 SCOPE_DISK = "/"
@@ -78,6 +78,18 @@ class SearchAPI:
         if not result:
             return res200(data={"path": ""})
         return res200(data={"path": result[0]})
+
+    def list_dir(self, path, include_hidden=False):
+        """列出目录下的直接子项，供前端树形浏览。"""
+        try:
+            items = list_directory(path, include_hidden=bool(include_hidden))
+        except NotADirectoryError as exc:
+            return res400(str(exc))
+        except PermissionError as exc:
+            return res400(f"没有权限访问该目录: {exc}")
+        except OSError as exc:
+            return res400(f"读取目录失败: {exc}")
+        return res200(data={"items": items})
 
     def home_dir(self):
         """返回用户主目录，供前端切换搜索范围。"""

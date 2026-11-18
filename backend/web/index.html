@@ -6,116 +6,189 @@
 <title>废纸篓管家</title>
 <style>
   :root {
-    --bg: #f6f6f7;
+    --bg: #f5f5f7;
     --panel: #ffffff;
+    --panel-2: #fafafc;
     --text: #1d1d1f;
-    --muted: #86868b;
-    --line: #e3e3e6;
-    --accent: #0a84ff;
-    --danger: #ff3b30;
-    --hover: #f0f0f2;
-    --selected: #e8f2ff;
+    --text-2: #4b4b50;
+    --muted: #8a8a8f;
+    --line: #e6e6ea;
+    --line-2: #f0f0f3;
+    --accent: #0a6cff;
+    --accent-soft: #e8f1ff;
+    --danger: #e5484d;
+    --hover: #f2f2f5;
+    --selected: #e9f2ff;
+    --radius: 7px;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1c1c1e; --panel: #2c2c2e; --text: #f5f5f7; --muted: #98989d;
-      --line: #3a3a3c; --accent: #0a84ff; --danger: #ff453a;
-      --hover: #353537; --selected: #1f3a5f;
+      --bg: #1b1b1e; --panel: #232327; --panel-2: #1f1f23;
+      --text: #f2f2f4; --text-2: #c8c8cd; --muted: #8e8e93;
+      --line: #34343a; --line-2: #2c2c31;
+      --accent: #4d94ff; --accent-soft: #1c3557;
+      --danger: #ff6369; --hover: #2c2c31; --selected: #1d3557;
     }
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
     background: var(--bg); color: var(--text);
-    font-size: 13px; height: 100vh; display: flex; flex-direction: column;
-    -webkit-font-smoothing: antialiased;
+    font-size: 13px; display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased; overflow: hidden;
   }
+  button { font-family: inherit; }
+
+  /* ---------- 顶栏 ---------- */
   header {
-    padding: 14px 18px 0; background: var(--panel);
+    padding: 0 16px; background: var(--panel);
     border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 16px; height: 46px;
+    flex-shrink: 0;
   }
-  .title-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
-  h1 { font-size: 15px; font-weight: 600; }
-  .subtitle { color: var(--muted); font-size: 12px; }
-  .tabs { display: flex; gap: 2px; }
+  .brand { display: flex; align-items: baseline; gap: 9px; }
+  .brand h1 { font-size: 14px; font-weight: 600; letter-spacing: .2px; }
+  .brand span { font-size: 11.5px; color: var(--muted); }
+  .tabs { display: flex; gap: 3px; margin-left: auto; background: var(--bg);
+          padding: 3px; border-radius: 8px; }
   .tab {
-    padding: 7px 14px; border: none; background: none; color: var(--muted);
-    font-size: 13px; cursor: pointer; border-radius: 6px 6px 0 0;
-    font-family: inherit;
+    padding: 4px 14px; border: none; background: none; color: var(--muted);
+    font-size: 12.5px; cursor: pointer; border-radius: 6px;
   }
-  .tab.active { color: var(--text); background: var(--bg); font-weight: 500; }
+  .tab.active { background: var(--panel); color: var(--text); font-weight: 500;
+                 box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+
   main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-  .panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
   .panel.active { display: flex; }
+
+  /* ---------- 工具栏 ---------- */
   .toolbar {
-    display: flex; align-items: center; gap: 8px; padding: 12px 18px;
-    background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap;
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px;
+    background: var(--panel); border-bottom: 1px solid var(--line); flex-shrink: 0;
   }
-  input[type=text], select {
-    font-family: inherit; font-size: 13px; color: var(--text);
-    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
-    padding: 5px 9px; outline: none;
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+                     opacity: .45; pointer-events: none; }
+  input[type=text] {
+    width: 100%; font-family: inherit; font-size: 13px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 6px 10px 6px 29px; outline: none;
   }
-  input[type=text]:focus, select:focus { border-color: var(--accent); }
-  #keyword { flex: 1; min-width: 180px; }
-  #scope { max-width: 260px; }
-  button {
-    font-family: inherit; font-size: 13px; cursor: pointer; border-radius: 6px;
-    padding: 5px 12px; border: 1px solid var(--line); background: var(--panel);
-    color: var(--text);
+  input[type=text]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  select, .btn {
+    font-family: inherit; font-size: 12.5px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 5px 11px; cursor: pointer; outline: none; white-space: nowrap;
   }
-  button:hover:not(:disabled) { background: var(--hover); }
-  button:disabled { opacity: .4; cursor: default; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  button.primary:hover:not(:disabled) { opacity: .85; background: var(--accent); }
-  button.danger { color: var(--danger); }
-  label.check { display: flex; align-items: center; gap: 5px; color: var(--muted); }
-  .list-wrap { flex: 1; overflow: auto; background: var(--panel); }
-  table { width: 100%; border-collapse: collapse; }
+  select { max-width: 150px; }
+  .btn:hover { background: var(--hover); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+  .btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+  .btn.danger { color: var(--danger); border-color: transparent; background: transparent; }
+  .btn.danger:hover:not(:disabled) { background: rgba(229,72,77,.1); }
+  .btn:disabled { opacity: .35; cursor: default; }
+  .check { display: flex; align-items: center; gap: 5px; color: var(--muted);
+           font-size: 12.5px; white-space: nowrap; cursor: pointer; }
+  input[type=checkbox] { accent-color: var(--accent); }
+
+  .pathbar {
+    padding: 6px 16px; background: var(--panel-2); border-bottom: 1px solid var(--line);
+    font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+  .pathbar .path { color: var(--text-2); font-weight: 500;
+                   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- 主体 ---------- */
+  .body { flex: 1; display: flex; min-height: 0; background: var(--panel); }
+  .tree-pane {
+    width: 268px; flex-shrink: 0; border-right: 1px solid var(--line);
+    overflow: auto; background: var(--panel-2); padding: 6px 0;
+  }
+  .tree-pane .pane-title {
+    font-size: 11px; color: var(--muted); padding: 6px 14px 8px;
+    text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+  }
+  .tree-node { user-select: none; }
+  .tree-row {
+    display: flex; align-items: center; gap: 5px; padding: 3px 12px 3px 0;
+    cursor: pointer; font-size: 12.5px; color: var(--text-2); white-space: nowrap;
+  }
+  .tree-row:hover { background: var(--hover); }
+  .tree-row.current { background: var(--accent-soft); color: var(--text); font-weight: 500; }
+  .tree-row .twisty {
+    width: 14px; flex-shrink: 0; display: inline-flex; justify-content: center;
+    opacity: .5; transition: transform .12s ease;
+  }
+  .tree-row .twisty svg { width: 9px; height: 9px; }
+  .tree-node.open > .tree-row .twisty { transform: rotate(90deg); }
+  .tree-row .label { overflow: hidden; text-overflow: ellipsis; }
+  .tree-row .count { margin-left: auto; font-size: 10.5px; color: var(--muted);
+                     padding-left: 8px; font-variant-numeric: tabular-nums; }
+  .tree-children { display: none; }
+  .tree-node.open > .tree-children { display: block; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--muted); }
+  .dot.dir { background: var(--accent); }
+  .dot.图片 { background: #34c759; } .dot.视频 { background: #af52de; }
+  .dot.音频 { background: #ff9f0a; } .dot.文档 { background: #ff375f; }
+  .dot.压缩包 { background: #8e8e93; } .dot.代码 { background: #5e5ce6; }
+  .dot.数据 { background: #64d2ff; } .dot.应用程序 { background: #30d158; }
+  .dot.模型文件 { background: #ff6482; } .dot.字体 { background: #bf5af2; }
+
+  .list-pane { flex: 1; overflow: auto; min-width: 0; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; }
   th {
-    position: sticky; top: 0; background: var(--panel); text-align: left;
-    font-weight: 500; color: var(--muted); padding: 7px 12px;
-    border-bottom: 1px solid var(--line); font-size: 12px; z-index: 1;
+    position: sticky; top: 0; z-index: 2; background: var(--panel);
+    text-align: left; font-weight: 600; color: var(--muted); font-size: 11.5px;
+    padding: 7px 12px; border-bottom: 1px solid var(--line); white-space: nowrap;
   }
-  td { padding: 5px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
-  td.path { color: var(--muted); max-width: 0; width: 45%; overflow: hidden;
-            text-overflow: ellipsis; }
+  td { padding: 5px 12px; border-bottom: 1px solid var(--line-2); white-space: nowrap;
+       color: var(--text-2); }
+  td.name { color: var(--text); }
   tr:hover td { background: var(--hover); }
   tr.selected td { background: var(--selected); }
-  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--text-2); }
+  td.kind { color: var(--muted); }
+  td.path { color: var(--muted); max-width: 0; width: 40%; overflow: hidden;
+            text-overflow: ellipsis; }
+  .name-cell { display: flex; align-items: center; gap: 7px; }
+  .name-cell .text { overflow: hidden; text-overflow: ellipsis; }
+  .chev { width: 11px; height: 11px; opacity: .45; flex-shrink: 0; }
+  .chev.open { transform: rotate(90deg); }
+  .folder-link { cursor: pointer; }
+  .folder-link:hover { color: var(--accent); text-decoration: underline; }
+
+  /* ---------- 状态栏 ---------- */
   .statusbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 10px 18px; background: var(--panel); border-top: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 16px; background: var(--panel); border-top: 1px solid var(--line);
+    flex-shrink: 0;
   }
-  .status { color: var(--muted); }
+  .status { color: var(--muted); font-size: 12px; }
+  .status b { color: var(--text-2); font-weight: 500; }
   .actions { display: flex; gap: 8px; }
-  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
-  .empty .big { font-size: 15px; margin-bottom: 6px; color: var(--text); }
-  .path-hint {
-    padding: 6px 18px; background: var(--panel); color: var(--muted);
-    border-bottom: 1px solid var(--line); font-size: 12px;
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .note {
-    padding: 8px 18px; background: var(--panel); color: var(--muted);
-    border-bottom: 1px solid var(--line); font-size: 12px;
-    display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  }
+
+  .empty { padding: 70px 20px; text-align: center; color: var(--muted); }
+  .empty .big { font-size: 14px; margin-bottom: 5px; color: var(--text-2); font-weight: 500; }
+
   #toast {
-    position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,.85); color: #fff; padding: 9px 18px; border-radius: 8px;
-    font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
-    max-width: 70vw; text-align: center;
+    position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%) translateY(6px);
+    background: rgba(28,28,30,.94); color: #fff; padding: 9px 18px; border-radius: 9px;
+    font-size: 12.5px; opacity: 0; transition: opacity .2s, transform .2s;
+    pointer-events: none; max-width: 70vw; text-align: center;
+    box-shadow: 0 6px 24px rgba(0,0,0,.22); z-index: 50;
   }
-  #toast.show { opacity: 1; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .hidden { display: none !important; }
 </style>
 </head>
 <body>
 <header>
-  <div class="title-row">
+  <div class="brand">
     <h1>废纸篓管家</h1>
-    <span class="subtitle">检索文件 · 移到废纸篓 · 一键恢复</span>
+    <span>检索 · 移入废纸篓 · 一键恢复</span>
   </div>
   <nav class="tabs">
     <button class="tab active" data-tab="search">文件检索</button>
@@ -124,72 +197,96 @@
 </header>
 
 <main>
-  <!-- 检索 -->
+  <!-- ============ 检索 ============ -->
   <section class="panel active" id="panel-search">
     <div class="toolbar">
-      <input type="text" id="keyword" placeholder="输入文件名关键字…" autofocus>
+      <div class="search-wrap">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14" stroke-linecap="round"/>
+        </svg>
+        <input type="text" id="keyword" placeholder="搜索文件名…" autofocus>
+      </div>
       <select id="scope">
         <option value="/" selected>全部磁盘</option>
         <option value="__home__">用户目录</option>
         <option value="__custom__">已选文件夹</option>
       </select>
-      <button id="pick">选择文件夹…</button>
+      <button class="btn" id="pick">选择文件夹…</button>
       <label class="check"><input type="checkbox" id="hidden"> 含隐藏项</label>
-      <button class="primary" id="do-search">搜索</button>
+      <button class="btn primary" id="do-search">搜索</button>
     </div>
-    <div class="path-hint" id="scope-hint">搜索范围：全部磁盘</div>
-    <div class="list-wrap" id="search-list">
-      <div class="empty" id="search-empty">
-        <div class="big">输入关键字开始检索</div>
-        <div>可选择全部磁盘、用户目录，或指定某个文件夹</div>
+    <div class="pathbar">
+      <span>搜索范围</span><span class="path" id="scope-hint">全部磁盘</span>
+    </div>
+
+    <div class="body">
+      <aside class="tree-pane">
+        <div class="pane-title">目录树</div>
+        <div id="tree"></div>
+      </aside>
+      <div class="list-pane">
+        <table id="file-table" class="hidden">
+          <thead><tr>
+            <th style="width:30px"><input type="checkbox" id="check-all"></th>
+            <th>名称</th>
+            <th style="width:96px">类型</th>
+            <th style="width:96px" class="num">大小</th>
+            <th style="width:150px">修改时间</th>
+            <th>位置</th>
+          </tr></thead>
+          <tbody id="file-rows"></tbody>
+        </table>
+        <div class="empty" id="file-empty">
+          <div class="big">开始检索</div>
+          <div>左侧是目录树，点击可逐层浏览</div>
+        </div>
       </div>
-      <table class="hidden" id="search-table">
-        <thead><tr>
-          <th style="width:28px"><input type="checkbox" id="search-all"></th>
-          <th>名称</th><th style="width:90px" class="num">大小</th>
-          <th style="width:140px">修改时间</th><th>位置</th>
-        </tr></thead>
-        <tbody id="search-rows"></tbody>
-      </table>
     </div>
+
     <div class="statusbar">
       <span class="status" id="search-status">就绪</span>
       <div class="actions">
-        <button class="danger" id="do-trash" disabled>移到废纸篓</button>
+        <button class="btn danger" id="do-trash" disabled>移到废纸篓</button>
       </div>
     </div>
   </section>
 
-  <!-- 废纸篓 -->
+  <!-- ============ 废纸篓 ============ -->
   <section class="panel" id="panel-trash">
-    <div class="note">
-      <span id="retention-hint">废纸篓中超过 7 天的内容会自动清理</span>
-      <span>
-        <label class="check">保留
-          <input type="number" id="retention" min="1" max="365" value="7" style="width:52px">
-          天
-        </label>
-        <button id="do-clean">立即清理</button>
+    <div class="toolbar">
+      <div style="flex:1"></div>
+      <span class="check">保留
+        <input type="number" id="retention" min="1" max="365" value="7"
+               style="width:54px;padding:4px 7px;border:1px solid var(--line);
+                      border-radius:6px;background:var(--bg);color:var(--text)">
+        天
       </span>
+      <button class="btn" id="do-clean">立即清理</button>
     </div>
-    <div class="list-wrap" id="trash-list">
+    <div class="pathbar">
+      <span id="retention-hint">超过保留天数的条目每天自动清理</span>
+    </div>
+    <div class="list-pane">
+      <table id="trash-table" class="hidden">
+        <thead><tr>
+          <th style="width:30px"><input type="checkbox" id="trash-check-all"></th>
+          <th>名称</th>
+          <th style="width:96px">类型</th>
+          <th style="width:96px" class="num">大小</th>
+          <th style="width:150px">删除时间</th>
+          <th>原位置</th>
+        </tr></thead>
+        <tbody id="trash-rows"></tbody>
+      </table>
       <div class="empty" id="trash-empty">
         <div class="big">废纸篓是空的</div>
         <div>去「文件检索」把不要的文件移进来吧</div>
       </div>
-      <table class="hidden" id="trash-table">
-        <thead><tr>
-          <th style="width:28px"><input type="checkbox" id="trash-all"></th>
-          <th>名称</th><th style="width:90px" class="num">大小</th>
-          <th style="width:140px">删除时间</th><th>原位置</th>
-        </tr></thead>
-        <tbody id="trash-rows"></tbody>
-      </table>
     </div>
     <div class="statusbar">
       <span class="status" id="trash-status">就绪</span>
       <div class="actions">
-        <button class="primary" id="do-restore" disabled>恢复到原位置</button>
+        <button class="btn primary" id="do-restore" disabled>恢复到原位置</button>
       </div>
     </div>
   </section>
@@ -199,11 +296,21 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+
+const CHEVRON = '<svg class="chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 2.5L8 6l-4 3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const KIND_CLASS = {
+  "图片": "图片", "视频": "视频", "音频": "音频", "文档": "文档", "压缩包": "压缩包",
+  "代码": "代码", "数据": "数据", "应用程序": "应用程序", "模型文件": "模型文件", "字体": "字体"
+};
+
 let customRoot = "";
 let homeDir = "";
-let searchSelection = new Set();
+let currentDir = "";          // 右表当前目录
+let selection = new Set();    // 选中的路径
 let trashSelection = new Set();
+let treeIndex = new Map();    // path -> 树节点
 
+/* ---------------- 通用 ---------------- */
 function toast(message) {
   const el = $("toast");
   el.textContent = message;
@@ -220,19 +327,182 @@ async function callApi(method, ...args) {
 }
 
 function fmtSize(bytes) {
-  if (!bytes) return "—";
+  if (bytes === undefined || bytes === null) return "—";
+  if (bytes === 0) return "0 B";
   const units = ["B", "KB", "MB", "GB", "TB"];
   let value = bytes, i = 0;
   while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; }
-  return value.toFixed(i === 0 ? 0 : 1) + " " + units[i];
+  return (i === 0 ? value : value.toFixed(1)) + " " + units[i];
 }
 
 function fmtTime(seconds) {
-  const d = new Date(seconds * 1000);
-  const p = (n) => String(n).padStart(2, "0");
+  if (!seconds) return "—";
+  const d = new Date(seconds * 1000), p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+function escapeHtml(text) {
+  return String(text ?? "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function kindDot(kind) {
+  const cls = KIND_CLASS[kind] || "";
+  return `<span class="dot ${cls}"></span>`;
+}
+
+/* ---------------- 目录树 ---------------- */
+function makeNode(name, path, isDir, kind) {
+  const node = { name, path, isDir, kind, children: [], loaded: false, open: false, count: 0 };
+  treeIndex.set(path, node);
+  return node;
+}
+
+function buildTree(items, rootPath) {
+  treeIndex = new Map();
+  const root = makeNode(rootPath === "/" ? "全部磁盘" : rootPath, rootPath, true, "文件夹");
+  const roots = [root];
+
+  for (const item of items) {
+    const parentPath = item.path.slice(0, item.path.length - item.name.length).replace(/\/$/, "") || "/";
+    let parent = treeIndex.get(parentPath);
+    if (!parent) {
+      // 上层目录不在结果里（没匹配到名字），补一条路径链
+      parent = ensurePath(parentPath, root);
+    }
+    if (!parent) continue;
+    const child = makeNode(item.name, item.path, item.is_dir, item.kind);
+    parent.children.push(child);
+    parent.count += 1;
+  }
+  return root;
+}
+
+function ensurePath(dirPath, root) {
+  // 为没有匹配项的中间层补出路径节点
+  if (!dirPath || dirPath === root.path) return root;
+  let node = treeIndex.get(dirPath);
+  if (node) return node;
+
+  const parentPath = dirPath.slice(0, dirPath.lastIndexOf("/")) || "/";
+  const parent = ensurePath(parentPath, root);
+  if (!parent) return null;
+  const name = dirPath.slice(dirPath.lastIndexOf("/") + 1) || dirPath;
+  node = makeNode(name, dirPath, true, "文件夹");
+  parent.children.push(node);
+  return node;
+}
+
+function renderTree(root) {
+  const box = $("tree");
+  box.innerHTML = "";
+  box.appendChild(renderNode(root, 0));
+  if (root.open) loadChildren(root);
+}
+
+function renderNode(node, depth) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "tree-node" + (node.open ? " open" : "");
+  const row = document.createElement("div");
+  row.className = "tree-row" + (node.path === currentDir ? " current" : "");
+  row.style.paddingLeft = (10 + depth * 13) + "px";
+  row.title = node.path;
+  const twisty = node.children.length || node.isDir
+    ? `<span class="twisty">${CHEVRON}</span>` : `<span class="twisty"></span>`;
+  row.innerHTML = `${twisty}${kindDot(node.kind)}<span class="label">${escapeHtml(node.name)}</span>` +
+                  (node.count ? `<span class="count">${node.count}</span>` : "");
+  row.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (event.target.closest(".twisty")) {
+      toggleNode(node);
+    } else {
+      selectNode(node);
+    }
+  });
+  wrapper.appendChild(row);
+
+  const children = document.createElement("div");
+  children.className = "tree-children";
+  node.children.forEach((child) => children.appendChild(renderNode(child, depth + 1)));
+  wrapper.appendChild(children);
+  return wrapper;
+}
+
+function toggleNode(node) {
+  node.open = !node.open;
+  redrawTree();
+  if (node.open) loadChildren(node);
+}
+
+function redrawTree() {
+  const tree = $("tree");
+  const root = treeIndex.get(tree.dataset.root);
+  if (root) renderTree(root);
+}
+
+async function loadChildren(node) {
+  if (node.loaded) return;
+  try {
+    const data = await callApi("search__list_dir", node.path, $("hidden").checked);
+    const known = new Set(node.children.map((c) => c.path));
+    for (const item of data.items || []) {
+      if (known.has(item.path)) continue;
+      const child = makeNode(item.name, item.path, item.is_dir, item.kind);
+      node.children.push(child);
+    }
+    node.loaded = true;
+    redrawTree();
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+async function selectNode(node) {
+  currentDir = node.path;
+  selection.clear();
+  updateButtons();
+  redrawTree();
+  await showDirectory(node.path);
+}
+
+async function showDirectory(path) {
+  try {
+    const data = await callApi("search__list_dir", path, $("hidden").checked);
+    renderFiles(data.items || []);
+    const node = treeIndex.get(path);
+    $("search-status").innerHTML = node
+      ? `<b>${escapeHtml(node.name)}</b> · ${(data.items || []).length} 个项目`
+      : `${(data.items || []).length} 个项目`;
+  } catch (err) {
+    toast(err.message);
+  }
+}
+
+function renderFiles(items) {
+  const table = $("file-table"), empty = $("file-empty");
+  if (!items.length) {
+    table.classList.add("hidden"); empty.classList.remove("hidden");
+    empty.querySelector(".big").textContent = "这里没有文件";
+    return;
+  }
+  table.classList.remove("hidden"); empty.classList.add("hidden");
+  $("file-rows").innerHTML = items.map((item) => {
+    const nameCell = item.is_dir
+      ? `<span class="name-cell">${CHEVRON}<span class="text folder-link">${escapeHtml(item.name)}</span></span>`
+      : `<span class="name-cell">${kindDot(item.kind)}<span class="text">${escapeHtml(item.name)}</span></span>`;
+    return `<tr data-path="${escapeHtml(item.path)}" data-dir="${item.is_dir ? 1 : 0}">
+      <td><input type="checkbox" class="row-check"></td>
+      <td class="name">${nameCell}</td>
+      <td class="kind">${escapeHtml(item.kind)}</td>
+      <td class="num">${item.is_dir ? "—" : fmtSize(item.size)}</td>
+      <td>${fmtTime(item.modified)}</td>
+      <td class="path" title="${escapeHtml(item.path)}">${escapeHtml(item.path)}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ---------------- 检索 ---------------- */
 function currentRoot() {
   const scope = $("scope").value;
   if (scope === "__home__") return homeDir;
@@ -244,24 +514,46 @@ function updateScopeHint() {
   const scope = $("scope").value;
   const label = scope === "/" ? "全部磁盘" : scope === "__home__" ? "用户目录" : "已选文件夹";
   const root = currentRoot();
-  $("scope-hint").textContent = root ? `搜索范围：${label} — ${root}` : `搜索范围：${label}`;
+  $("scope-hint").textContent = root ? `${label} — ${root}` : label;
 }
 
-// ---- 检索 ----
+async function autoExpandTo(root, items) {
+  // 把首个匹配项的祖先链逐层展开，让结果一眼可见
+  if (!items.length) return root;
+  const parts = items[0].path.split("/").filter(Boolean);
+  let path = "";
+  for (let i = 0; i < parts.length - 1; i++) {
+    path += "/" + parts[i];
+    const node = treeIndex.get(path);
+    if (!node) continue;
+    node.open = true;
+    await loadChildren(node);
+  }
+  return treeIndex.get(items[0].path.slice(0, items[0].path.lastIndexOf("/")) || "/") || root;
+}
+
 async function doSearch() {
   const keyword = $("keyword").value.trim();
   const root = currentRoot();
   if (!root) { toast("请先选择文件夹"); return; }
   $("do-search").disabled = true;
   $("search-status").textContent = "搜索中…";
-  $("search-rows").innerHTML = "";
-  searchSelection.clear();
-  updateButtons();
   try {
     const data = await callApi("search__find", keyword, root, 0, $("hidden").checked);
-    renderSearch(data.items || []);
+    const items = data.items || [];
+    const treeRoot = buildTree(items, root);
+    treeRoot.open = true;
+    $("tree").dataset.root = root;
+    await autoExpandTo(treeRoot, items);
+    redrawTree();
+    // 右表定位到首个匹配项所在目录
+    const first = items[0];
+    currentDir = first
+      ? (first.path.slice(0, first.path.lastIndexOf("/")) || "/")
+      : root;
+    await showDirectory(currentDir);
     const note = data.truncated ? "（已达上限或超时，结果可能不完整）" : "";
-    $("search-status").textContent = `找到 ${(data.items || []).length} 项，用时 ${data.elapsed}s ${note}`;
+    $("search-status").innerHTML = `找到 <b>${items.length}</b> 项 · 用时 ${data.elapsed}s ${note}`;
   } catch (err) {
     $("search-status").textContent = "搜索失败";
     toast(err.message);
@@ -270,39 +562,23 @@ async function doSearch() {
   }
 }
 
-function renderSearch(items) {
-  const table = $("search-table"), empty = $("search-empty");
-  if (!items.length) {
-    table.classList.add("hidden"); empty.classList.remove("hidden");
-    empty.querySelector(".big").textContent = "没有匹配的文件";
-    return;
-  }
-  table.classList.remove("hidden"); empty.classList.add("hidden");
-  $("search-rows").innerHTML = items.map((item, index) => `
-    <tr data-path="${escapeAttr(item.path)}" data-index="${index}">
-      <td><input type="checkbox" class="row-check"></td>
-      <td>${item.is_dir ? "📁 " : ""}${escapeHtml(item.name)}</td>
-      <td class="num">${item.is_dir ? "—" : fmtSize(item.size)}</td>
-      <td>${fmtTime(item.modified)}</td>
-      <td class="path" title="${escapeAttr(item.path)}">${escapeHtml(item.path)}</td>
-    </tr>`).join("");
-}
-
 async function moveSelectedToTrash() {
-  const paths = [...searchSelection];
+  const paths = [...selection];
   if (!paths.length) return;
   if (!confirm(`确定把选中的 ${paths.length} 项移到废纸篓？\n可以随时在「废纸篓」页恢复。`)) return;
   try {
     const data = await callApi("trash__remove", paths);
     const failed = data.failed || [];
-    if (failed.length) toast(`${data.succeeded.length} 项成功，${failed.length} 项失败`);
-    else toast(`已移到废纸篓 ${data.succeeded.length} 项`);
-    await doSearch();
-    await loadTrash();
+    toast(failed.length
+      ? `${data.succeeded.length} 项成功，${failed.length} 项失败`
+      : `已移到废纸篓 ${data.succeeded.length} 项`);
+    selection.clear();
+    updateButtons();
+    await showDirectory(currentDir);
   } catch (err) { toast(err.message); }
 }
 
-// ---- 废纸篓 ----
+/* ---------------- 废纸篓 ---------------- */
 async function loadTrash() {
   try {
     const data = await callApi("trash__list_items");
@@ -314,15 +590,16 @@ async function loadTrash() {
     } else {
       table.classList.remove("hidden"); empty.classList.add("hidden");
       $("trash-rows").innerHTML = items.map((item) => `
-        <tr data-path="${escapeAttr(item.path)}">
+        <tr data-path="${escapeHtml(item.path)}">
           <td><input type="checkbox" class="row-check"></td>
-          <td>${item.is_dir ? "📁 " : ""}${escapeHtml(item.name)}</td>
+          <td class="name"><span class="name-cell">${kindDot(item.kind)}<span class="text">${escapeHtml(item.name)}</span></span></td>
+          <td class="kind">${escapeHtml(item.kind)}</td>
           <td class="num">${item.is_dir ? "—" : fmtSize(item.size)}</td>
           <td>${fmtTime(item.modified)}</td>
-          <td class="path" title="${escapeAttr(item.original || "未知（由 Finder 删除）")}">${escapeHtml(item.original || "未知（由 Finder 删除）")}</td>
+          <td class="path" title="${escapeHtml(item.original || "未知（由 Finder 删除）")}">${escapeHtml(item.original || "未知（由 Finder 删除）")}</td>
         </tr>`).join("");
     }
-    $("trash-status").textContent = `废纸篓中 ${items.length} 项`;
+    $("trash-status").innerHTML = `废纸篓中 <b>${items.length}</b> 项`;
     updateButtons();
   } catch (err) {
     $("trash-status").textContent = "读取失败";
@@ -352,37 +629,64 @@ async function cleanTrash() {
   } catch (err) { toast(err.message); }
 }
 
-// ---- 交互 ----
+/* ---------------- 交互 ---------------- */
 function updateButtons() {
-  $("do-trash").disabled = searchSelection.size === 0;
+  $("do-trash").disabled = selection.size === 0;
   $("do-restore").disabled = trashSelection.size === 0;
-  $("do-trash").textContent = searchSelection.size ? `移到废纸篓 (${searchSelection.size})` : "移到废纸篓";
+  $("do-trash").textContent = selection.size ? `移到废纸篓 (${selection.size})` : "移到废纸篓";
   $("do-restore").textContent = trashSelection.size ? `恢复到原位置 (${trashSelection.size})` : "恢复到原位置";
 }
 
-function bindTable(tableId, selection) {
-  const table = $(tableId);
-  table.addEventListener("click", (event) => {
+function bindTable(tableId, selectionSet) {
+  $(tableId).addEventListener("click", (event) => {
     const row = event.target.closest("tr");
     if (!row || !row.dataset.path) return;
     const check = row.querySelector(".row-check");
+    const link = event.target.closest(".folder-link");
+    if (link) {
+      openFolder(row.dataset.path);
+      return;
+    }
     if (event.target === check) {
-      check.checked ? selection.add(row.dataset.path) : selection.delete(row.dataset.path);
+      check.checked ? selectionSet.add(row.dataset.path) : selectionSet.delete(row.dataset.path);
     } else {
       check.checked = !check.checked;
-      check.checked ? selection.add(row.dataset.path) : selection.delete(row.dataset.path);
+      check.checked ? selectionSet.add(row.dataset.path) : selectionSet.delete(row.dataset.path);
     }
     row.classList.toggle("selected", check.checked);
     updateButtons();
   });
 }
 
-function escapeHtml(text) {
-  return String(text).replace(/[&<>"']/g, (c) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-  }[c]));
+async function openFolder(path) {
+  const node = treeIndex.get(path);
+  if (node) {
+    node.open = true;
+    currentDir = path;
+    selection.clear();
+    updateButtons();
+    redrawTree();
+    await showDirectory(path);
+  } else {
+    // 目录还没进树，先补进来再展开
+    try {
+      const data = await callApi("search__list_dir", path, $("hidden").checked);
+      const root = treeIndex.get($("tree").dataset.root);
+      if (root) {
+        const parent = ensurePath(path.slice(0, path.lastIndexOf("/")) || "/", root);
+        if (parent && !parent.children.some((c) => c.path === path)) {
+          const child = makeNode(path.slice(path.lastIndexOf("/") + 1), path, true, "文件夹");
+          parent.children.push(child);
+        }
+        currentDir = path;
+        selection.clear();
+        updateButtons();
+        redrawTree();
+        await showDirectory(path);
+      }
+    } catch (err) { toast(err.message); }
+  }
 }
-function escapeAttr(text) { return escapeHtml(text); }
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
@@ -401,17 +705,17 @@ $("do-trash").addEventListener("click", moveSelectedToTrash);
 $("do-restore").addEventListener("click", restoreSelected);
 $("do-clean").addEventListener("click", cleanTrash);
 
-$("search-all").addEventListener("change", (e) => {
-  document.querySelectorAll("#search-rows .row-check").forEach((check) => {
+$("check-all").addEventListener("change", (e) => {
+  document.querySelectorAll("#file-rows .row-check").forEach((check) => {
     check.checked = e.target.checked;
     const path = check.closest("tr").dataset.path;
-    e.target.checked ? searchSelection.add(path) : searchSelection.delete(path);
+    e.target.checked ? selection.add(path) : selection.delete(path);
     check.closest("tr").classList.toggle("selected", e.target.checked);
   });
   updateButtons();
 });
 
-$("trash-all").addEventListener("change", (e) => {
+$("trash-check-all").addEventListener("change", (e) => {
   document.querySelectorAll("#trash-rows .row-check").forEach((check) => {
     check.checked = e.target.checked;
     const path = check.closest("tr").dataset.path;
@@ -432,7 +736,7 @@ $("pick").addEventListener("click", async () => {
   } catch (err) { toast(err.message); }
 });
 
-bindTable("search-table", searchSelection);
+bindTable("file-table", selection);
 bindTable("trash-table", trashSelection);
 
 window.onSearchProgress = (count) => {
@@ -443,7 +747,7 @@ async function initApp() {
   try {
     const info = await callApi("get_system_info");
     $("retention").value = info.retention_days;
-    $("retention-hint").textContent = `废纸篓中超过 ${info.retention_days} 天的内容会自动清理`;
+    $("retention-hint").textContent = `废纸篓中超过 ${info.retention_days} 天的内容每天自动清理`;
     const home = await callApi("search__home_dir");
     homeDir = home.path;
   } catch (err) { toast(err.message); }
@@ -451,7 +755,6 @@ async function initApp() {
   updateScopeHint();
 }
 
-// pywebviewready 事件可能早于监听器注册而丢失，所以先探测再监听
 if (window.pywebview && window.pywebview.api) initApp();
 else window.addEventListener("pywebviewready", initApp);
 </script>

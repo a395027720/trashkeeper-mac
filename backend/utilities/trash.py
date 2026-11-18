@@ -16,6 +16,8 @@ import subprocess
 import time
 from pathlib import Path
 
+from utilities.kinds import classify
+
 APP_SUPPORT = Path.home() / "Library" / "Application Support" / "TrashKeeper"
 RECORDS_FILE = APP_SUPPORT / "records.json"
 TRASH_UID = os.getuid()
@@ -211,12 +213,14 @@ def list_trash() -> list:
             except OSError:
                 continue
             record = records.get(str(entry))
+            is_dir = entry.is_dir()
             items.append(
                 {
                     "name": entry.name,
                     "path": str(entry),
                     "size": stat.st_size,
-                    "is_dir": entry.is_dir(),
+                    "is_dir": is_dir,
+                    "kind": classify(entry.name, is_dir),
                     "modified": stat.st_mtime,
                     "original": record["original"] if record else "",
                     "volume": trash_dir.parent.name if trash_dir.name == ".Trashes" else "启动盘",

@@ -1,0 +1,44 @@
+{
+  "name": "trashkeeper-mac",
+  "version": "0.1.0",
+  "description": "macOS 废纸篓管家：检索全盘文件、移到废纸篓、一键恢复，废纸篓自动按天清理",
+  "keywords": [
+    "macos",
+    "trash",
+    "file-search",
+    "search",
+    "recycle-bin",
+    "pywebview",
+    "cleanup"
+  ],
+  "homepage": "https://github.com/fuck-baby/trashkeeper-mac#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fuck-baby/trashkeeper-mac.git"
+  },
+  "bugs": {
+    "url": "https://github.com/fuck-baby/trashkeeper-mac/issues"
+  },
+  "bin": {
+    "trashkeeper": "bin/trashkeeper.js"
+  },
+  "scripts": {
+    "postinstall": "node lib/install.js",
+    "uninstall": "node lib/uninstall.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "vendor",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}

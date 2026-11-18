@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>废纸篓管家</title>
+<style>
+  :root {
+    --bg: #f6f6f7;
+    --panel: #ffffff;
+    --text: #1d1d1f;
+    --muted: #86868b;
+    --line: #e3e3e6;
+    --accent: #0a84ff;
+    --danger: #ff3b30;
+    --hover: #f0f0f2;
+    --selected: #e8f2ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1e; --panel: #2c2c2e; --text: #f5f5f7; --muted: #98989d;
+      --line: #3a3a3c; --accent: #0a84ff; --danger: #ff453a;
+      --hover: #353537; --selected: #1f3a5f;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    background: var(--bg); color: var(--text);
+    font-size: 13px; height: 100vh; display: flex; flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    padding: 14px 18px 0; background: var(--panel);
+    border-bottom: 1px solid var(--line);
+  }
+  .title-row { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+  h1 { font-size: 15px; font-weight: 600; }
+  .subtitle { color: var(--muted); font-size: 12px; }
+  .tabs { display: flex; gap: 2px; }
+  .tab {
+    padding: 7px 14px; border: none; background: none; color: var(--muted);
+    font-size: 13px; cursor: pointer; border-radius: 6px 6px 0 0;
+    font-family: inherit;
+  }
+  .tab.active { color: var(--text); background: var(--bg); font-weight: 500; }
+  main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .panel.active { display: flex; }
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; padding: 12px 18px;
+    background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap;
+  }
+  input[type=text], select {
+    font-family: inherit; font-size: 13px; color: var(--text);
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 5px 9px; outline: none;
+  }
+  input[type=text]:focus, select:focus { border-color: var(--accent); }
+  #keyword { flex: 1; min-width: 180px; }
+  #scope { max-width: 260px; }
+  button {
+    font-family: inherit; font-size: 13px; cursor: pointer; border-radius: 6px;
+    padding: 5px 12px; border: 1px solid var(--line); background: var(--panel);
+    color: var(--text);
+  }
+  button:hover:not(:disabled) { background: var(--hover); }
+  button:disabled { opacity: .4; cursor: default; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover:not(:disabled) { opacity: .85; background: var(--accent); }
+  button.danger { color: var(--danger); }
+  label.check { display: flex; align-items: center; gap: 5px; color: var(--muted); }
+  .list-wrap { flex: 1; overflow: auto; background: var(--panel); }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    position: sticky; top: 0; background: var(--panel); text-align: left;
+    font-weight: 500; color: var(--muted); padding: 7px 12px;
+    border-bottom: 1px solid var(--line); font-size: 12px; z-index: 1;
+  }
+  td { padding: 5px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td.path { color: var(--muted); max-width: 0; width: 45%; overflow: hidden;
+            text-overflow: ellipsis; }
+  tr:hover td { background: var(--hover); }
+  tr.selected td { background: var(--selected); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px; background: var(--panel); border-top: 1px solid var(--line);
+  }
+  .status { color: var(--muted); }
+  .actions { display: flex; gap: 8px; }
+  .empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+  .empty .big { font-size: 15px; margin-bottom: 6px; color: var(--text); }
+  .path-hint {
+    padding: 6px 18px; background: var(--panel); color: var(--muted);
+    border-bottom: 1px solid var(--line); font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .note {
+    padding: 8px 18px; background: var(--panel); color: var(--muted);
+    border-bottom: 1px solid var(--line); font-size: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  #toast {
+    position: fixed; bottom: 62px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,.85); color: #fff; padding: 9px 18px; border-radius: 8px;
+    font-size: 13px; opacity: 0; transition: opacity .25s; pointer-events: none;
+    max-width: 70vw; text-align: center;
+  }
+  #toast.show { opacity: 1; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row">
+    <h1>废纸篓管家</h1>
+    <span class="subtitle">检索文件 · 移到废纸篓 · 一键恢复</span>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="search">文件检索</button>
+    <button class="tab" data-tab="trash">废纸篓</button>
+  </nav>
+</header>
+
+<main>
+  <!-- 检索 -->
+  <section class="panel active" id="panel-search">
+    <div class="toolbar">
+      <input type="text" id="keyword" placeholder="输入文件名关键字…" autofocus>
+      <select id="scope">
+        <option value="/" selected>全部磁盘</option>
+        <option value="__home__">用户目录</option>
+        <option value="__custom__">已选文件夹</option>
+      </select>
+      <button id="pick">选择文件夹…</button>
+      <label class="check"><input type="checkbox" id="hidden"> 含隐藏项</label>
+      <button class="primary" id="do-search">搜索</button>
+    </div>
+    <div class="path-hint" id="scope-hint">搜索范围：全部磁盘</div>
+    <div class="list-wrap" id="search-list">
+      <div class="empty" id="search-empty">
+        <div class="big">输入关键字开始检索</div>
+        <div>可选择全部磁盘、用户目录，或指定某个文件夹</div>
+      </div>
+      <table class="hidden" id="search-table">
+        <thead><tr>
+          <th style="width:28px"><input type="checkbox" id="search-all"></th>
+          <th>名称</th><th style="width:90px" class="num">大小</th>
+          <th style="width:140px">修改时间</th><th>位置</th>
+        </tr></thead>
+        <tbody id="search-rows"></tbody>
+      </table>
+    </div>
+    <div class="statusbar">
+      <span class="status" id="search-status">就绪</span>
+      <div class="actions">
+        <button class="danger" id="do-trash" disabled>移到废纸篓</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 废纸篓 -->
+  <section class="panel" id="panel-trash">
+    <div class="note">
+      <span id="retention-hint">废纸篓中超过 7 天的内容会自动清理</span>
+      <span>
+        <label class="check">保留
+          <input type="number" id="retention" min="1" max="365" value="7" style="width:52px">
+          天
+        </label>
+        <button id="do-clean">立即清理</button>
+      </span>
+    </div>
+    <div class="list-wrap" id="trash-list">
+      <div class="empty" id="trash-empty">
+        <div class="big">废纸篓是空的</div>
+        <div>去「文件检索」把不要的文件移进来吧</div>
+      </div>
+      <table class="hidden" id="trash-table">
+        <thead><tr>
+          <th style="width:28px"><input type="checkbox" id="trash-all"></th>
+          <th>名称</th><th style="width:90px" class="num">大小</th>
+          <th style="width:140px">删除时间</th><th>原位置</th>
+        </tr></thead>
+        <tbody id="trash-rows"></tbody>
+      </table>
+    </div>
+    <div class="statusbar">
+      <span class="status" id="trash-status">就绪</span>
+      <div class="actions">
+        <button class="primary" id="do-restore" disabled>恢复到原位置</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let customRoot = "";
+let homeDir = "";
+let searchSelection = new Set();
+let trashSelection = new Set();
+
+function toast(message) {
+  const el = $("toast");
+  el.textContent = message;
+  el.classList.add("show");
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove("show"), 2600);
+}
+
+async function callApi(method, ...args) {
+  const raw = await window.pywebview.api[method](...args);
+  const parsed = JSON.parse(raw);
+  if (parsed.code !== 200) throw new Error(parsed.error_msg || "操作失败");
+  return parsed.data;
+}
+
+function fmtSize(bytes) {
+  if (!bytes) return "—";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = bytes, i = 0;
+  while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; }
+  return value.toFixed(i === 0 ? 0 : 1) + " " + units[i];
+}
+
+function fmtTime(seconds) {
+  const d = new Date(seconds * 1000);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+function currentRoot() {
+  const scope = $("scope").value;
+  if (scope === "__home__") return homeDir;
+  if (scope === "__custom__") return customRoot;
+  return "/";
+}
+
+function updateScopeHint() {
+  const scope = $("scope").value;
+  const label = scope === "/" ? "全部磁盘" : scope === "__home__" ? "用户目录" : "已选文件夹";
+  const root = currentRoot();
+  $("scope-hint").textContent = root ? `搜索范围：${label} — ${root}` : `搜索范围：${label}`;
+}
+
+// ---- 检索 ----
+async function doSearch() {
+  const keyword = $("keyword").value.trim();
+  const root = currentRoot();
+  if (!root) { toast("请先选择文件夹"); return; }
+  $("do-search").disabled = true;
+  $("search-status").textContent = "搜索中…";
+  $("search-rows").innerHTML = "";
+  searchSelection.clear();
+  updateButtons();
+  try {
+    const data = await callApi("search__find", keyword, root, 0, $("hidden").checked);
+    renderSearch(data.items || []);
+    const note = data.truncated ? "（已达上限或超时，结果可能不完整）" : "";
+    $("search-status").textContent = `找到 ${(data.items || []).length} 项，用时 ${data.elapsed}s ${note}`;
+  } catch (err) {
+    $("search-status").textContent = "搜索失败";
+    toast(err.message);
+  } finally {
+    $("do-search").disabled = false;
+  }
+}
+
+function renderSearch(items) {
+  const table = $("search-table"), empty = $("search-empty");
+  if (!items.length) {
+    table.classList.add("hidden"); empty.classList.remove("hidden");
+    empty.querySelector(".big").textContent = "没有匹配的文件";
+    return;
+  }
+  table.classList.remove("hidden"); empty.classList.add("hidden");
+  $("search-rows").innerHTML = items.map((item, index) => `
+    <tr data-path="${escapeAttr(item.path)}" data-index="${index}">
+      <td><input type="checkbox" class="row-check"></td>
+      <td>${item.is_dir ? "📁 " : ""}${escapeHtml(item.name)}</td>
+      <td class="num">${item.is_dir ? "—" : fmtSize(item.size)}</td>
+      <td>${fmtTime(item.modified)}</td>
+      <td class="path" title="${escapeAttr(item.path)}">${escapeHtml(item.path)}</td>
+    </tr>`).join("");
+}
+
+async function moveSelectedToTrash() {
+  const paths = [...searchSelection];
+  if (!paths.length) return;
+  if (!confirm(`确定把选中的 ${paths.length} 项移到废纸篓？\n可以随时在「废纸篓」页恢复。`)) return;
+  try {
+    const data = await callApi("trash__remove", paths);
+    const failed = data.failed || [];
+    if (failed.length) toast(`${data.succeeded.length} 项成功，${failed.length} 项失败`);
+    else toast(`已移到废纸篓 ${data.succeeded.length} 项`);
+    await doSearch();
+    await loadTrash();
+  } catch (err) { toast(err.message); }
+}
+
+// ---- 废纸篓 ----
+async function loadTrash() {
+  try {
+    const data = await callApi("trash__list_items");
+    const items = data.items || [];
+    trashSelection.clear();
+    const table = $("trash-table"), empty = $("trash-empty");
+    if (!items.length) {
+      table.classList.add("hidden"); empty.classList.remove("hidden");
+    } else {
+      table.classList.remove("hidden"); empty.classList.add("hidden");
+      $("trash-rows").innerHTML = items.map((item) => `
+        <tr data-path="${escapeAttr(item.path)}">
+          <td><input type="checkbox" class="row-check"></td>
+          <td>${item.is_dir ? "📁 " : ""}${escapeHtml(item.name)}</td>
+          <td class="num">${item.is_dir ? "—" : fmtSize(item.size)}</td>
+          <td>${fmtTime(item.modified)}</td>
+          <td class="path" title="${escapeAttr(item.original || "未知（由 Finder 删除）")}">${escapeHtml(item.original || "未知（由 Finder 删除）")}</td>
+        </tr>`).join("");
+    }
+    $("trash-status").textContent = `废纸篓中 ${items.length} 项`;
+    updateButtons();
+  } catch (err) {
+    $("trash-status").textContent = "读取失败";
+    toast(err.message);
+  }
+}
+
+async function restoreSelected() {
+  const paths = [...trashSelection];
+  if (!paths.length) return;
+  let ok = 0, fail = 0;
+  for (const path of paths) {
+    try { await callApi("trash__restore", path); ok++; }
+    catch (err) { fail++; }
+  }
+  toast(fail ? `${ok} 项已恢复，${fail} 项失败` : `已恢复 ${ok} 项`);
+  await loadTrash();
+}
+
+async function cleanTrash() {
+  const days = parseInt($("retention").value, 10) || 7;
+  try {
+    await callApi("trash__set_retention_days", days);
+    const data = await callApi("trash__clean", days);
+    toast(`清理了 ${data.removed} 项，释放 ${fmtSize(data.freed)}`);
+    await loadTrash();
+  } catch (err) { toast(err.message); }
+}
+
+// ---- 交互 ----
+function updateButtons() {
+  $("do-trash").disabled = searchSelection.size === 0;
+  $("do-restore").disabled = trashSelection.size === 0;
+  $("do-trash").textContent = searchSelection.size ? `移到废纸篓 (${searchSelection.size})` : "移到废纸篓";
+  $("do-restore").textContent = trashSelection.size ? `恢复到原位置 (${trashSelection.size})` : "恢复到原位置";
+}
+
+function bindTable(tableId, selection) {
+  const table = $(tableId);
+  table.addEventListener("click", (event) => {
+    const row = event.target.closest("tr");
+    if (!row || !row.dataset.path) return;
+    const check = row.querySelector(".row-check");
+    if (event.target === check) {
+      check.checked ? selection.add(row.dataset.path) : selection.delete(row.dataset.path);
+    } else {
+      check.checked = !check.checked;
+      check.checked ? selection.add(row.dataset.path) : selection.delete(row.dataset.path);
+    }
+    row.classList.toggle("selected", check.checked);
+    updateButtons();
+  });
+}
+
+function escapeHtml(text) {
+  return String(text).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+function escapeAttr(text) { return escapeHtml(text); }
+
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+    tab.classList.add("active");
+    $("panel-" + tab.dataset.tab).classList.add("active");
+    if (tab.dataset.tab === "trash") loadTrash();
+  });
+});
+
+$("do-search").addEventListener("click", doSearch);
+$("keyword").addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });
+$("scope").addEventListener("change", updateScopeHint);
+$("do-trash").addEventListener("click", moveSelectedToTrash);
+$("do-restore").addEventListener("click", restoreSelected);
+$("do-clean").addEventListener("click", cleanTrash);
+
+$("search-all").addEventListener("change", (e) => {
+  document.querySelectorAll("#search-rows .row-check").forEach((check) => {
+    check.checked = e.target.checked;
+    const path = check.closest("tr").dataset.path;
+    e.target.checked ? searchSelection.add(path) : searchSelection.delete(path);
+    check.closest("tr").classList.toggle("selected", e.target.checked);
+  });
+  updateButtons();
+});
+
+$("trash-all").addEventListener("change", (e) => {
+  document.querySelectorAll("#trash-rows .row-check").forEach((check) => {
+    check.checked = e.target.checked;
+    const path = check.closest("tr").dataset.path;
+    e.target.checked ? trashSelection.add(path) : trashSelection.delete(path);
+    check.closest("tr").classList.toggle("selected", e.target.checked);
+  });
+  updateButtons();
+});
+
+$("pick").addEventListener("click", async () => {
+  try {
+    const data = await callApi("search__pick_folder");
+    if (!data.path) return;
+    customRoot = data.path;
+    $("scope").value = "__custom__";
+    updateScopeHint();
+    toast("已选择文件夹");
+  } catch (err) { toast(err.message); }
+});
+
+bindTable("search-table", searchSelection);
+bindTable("trash-table", trashSelection);
+
+window.onSearchProgress = (count) => {
+  $("search-status").textContent = `搜索中… 已找到 ${count} 项`;
+};
+
+async function initApp() {
+  try {
+    const info = await callApi("get_system_info");
+    $("retention").value = info.retention_days;
+    $("retention-hint").textContent = `废纸篓中超过 ${info.retention_days} 天的内容会自动清理`;
+    const home = await callApi("search__home_dir");
+    homeDir = home.path;
+  } catch (err) { toast(err.message); }
+  $("scope").value = "/";
+  updateScopeHint();
+}
+
+// pywebviewready 事件可能早于监听器注册而丢失，所以先探测再监听
+if (window.pywebview && window.pywebview.api) initApp();
+else window.addEventListener("pywebviewready", initApp);
+</script>
+</body>
+</html>

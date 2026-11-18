@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 打包产物
+backend/build/
+backend/dist/
+backend/*.spec.bak
+backend/assets/icon.iconset/
+backend/assets/icon_1024.png
+
+# npm
+node_modules/
+*.tgz
+# 预编译的 .app 是构建产物，不进版本库（发布时由 npm/.npmignore 单独包含）
+npm/vendor/
+
+# 系统
+.DS_Store

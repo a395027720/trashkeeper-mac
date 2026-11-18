@@ -1,0 +1,10 @@
+# 只发布这些内容。npm 默认会用根目录的 .gitignore 排除，
+# 而 vendor/ 里是构建出来的二进制，需要显式包含进来。
+*
+!package.json
+!README.md
+!LICENSE
+!bin/
+!lib/
+!scripts/
+!vendor/

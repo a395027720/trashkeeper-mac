@@ -11,6 +11,7 @@ import argparse
 import os
 import platform
 import shutil
+import sys
 import subprocess
 from pathlib import Path
 
@@ -32,7 +33,7 @@ def build_icon():
         shutil.rmtree(iconset)
     iconset.mkdir(parents=True, exist_ok=True)
 
-    run("python3 assets/make_icon.py")
+    run(f"{sys.executable} assets/make_icon.py")
     source = Path("assets/icon_1024.png")
 
     for size in (16, 32, 128, 256, 512):
@@ -58,6 +59,14 @@ def build_app():
     print(f"✓ 打包完成: {app}  ({size / 1024 / 1024:.1f} MB)")
 
 
+def build_dmg():
+    """打出 DMG 安装包。"""
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from mac_dmg import build_dmg as make_dmg
+
+    make_dmg()
+
+
 def build_zip():
     """把 .app 压成 zip，便于分发。"""
     release = DIST_DIR / "mac-release"
@@ -74,7 +83,10 @@ def build_zip():
 def main():
     parser = argparse.ArgumentParser(description="构建废纸篓管家")
     parser.add_argument(
-        "-t", "--type", default="p", help="i=图标 / p=打包 / z=压缩"
+        "-t",
+        "--type",
+        default="p",
+        help="i=图标 / p=打包 .app / d=打包 DMG / z=压缩",
     )
     args = parser.parse_args()
 
@@ -85,6 +97,8 @@ def main():
         build_icon()
     elif args.type == "p":
         build_app()
+    elif args.type == "d":
+        build_dmg()
     elif args.type == "z":
         build_zip()
     else:

@@ -1,0 +1,52 @@
+name: Release
+
+# 打 v 开头的 tag 时自动构建并发布到 npm
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pywebview pyinstaller pillow
+
+      - name: 构建 .app 与 DMG
+        run: |
+          cd backend
+          python build.py -t i
+          python build.py -t p
+          python build.py -t d
+
+      - name: 准备 npm 包
+        run: |
+          mkdir -p npm/vendor
+          rm -rf npm/vendor/*.dmg
+          cp backend/dist/mac-release/*.dmg npm/vendor/
+          cd npm
+          npm pack
+
+      - name: 配置 npm
+        uses: actions/setup-node@v4
+        with:
+          registry-url: "https://registry.npmjs.org"
+          scope: "@a395027720"
+
+      - name: 发布到 npm
+        run: npm publish --provenance --access public
+        working-directory: npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

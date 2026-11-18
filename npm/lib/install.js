@@ -30,13 +30,37 @@ function copyDir(from, to) {
   fs.cpSync(from, to, { recursive: true });
 }
 
+function findDmg() {
+  const vendor = path.join(__dirname, "..", "vendor");
+  if (!fs.existsSync(vendor)) return null;
+  const dmg = fs.readdirSync(vendor).find((name) => name.endsWith(".dmg"));
+  return dmg ? path.join(vendor, dmg) : null;
+}
+
 function installApp() {
-  const source = path.join(__dirname, "..", "vendor", APP_NAME);
-  if (!fs.existsSync(source)) {
-    throw new Error(`安装包内缺少 ${APP_NAME}`);
+  const dmg = findDmg();
+  if (!dmg) {
+    throw new Error("安装包内缺少 DMG");
   }
-  fs.mkdirSync(INSTALL_DIR, { recursive: true });
-  copyDir(source, path.join(INSTALL_DIR, APP_NAME));
+  const mountPoint = fs.mkdtempSync(path.join(os.tmpdir(), "trashkeeper-"));
+  try {
+    execFileSync("hdiutil", ["attach", dmg, "-nobrowse", "-mountpoint", mountPoint], {
+      stdio: "ignore",
+    });
+    const source = path.join(mountPoint, APP_NAME);
+    if (!fs.existsSync(source)) {
+      throw new Error(`DMG 内没有找到 ${APP_NAME}`);
+    }
+    fs.mkdirSync(INSTALL_DIR, { recursive: true });
+    copyDir(source, path.join(INSTALL_DIR, APP_NAME));
+  } finally {
+    try {
+      execFileSync("hdiutil", ["detach", mountPoint], { stdio: "ignore" });
+    } catch (error) {
+      // 卸载失败不影响已经复制出来的应用
+    }
+    fs.rmSync(mountPoint, { recursive: true, force: true });
+  }
   log(`应用已安装到 ${INSTALL_DIR}`);
 }
 

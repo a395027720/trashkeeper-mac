@@ -26,9 +26,18 @@ npm install -g trashkeeper-mac
 trashkeeper
 ```
 
-安装脚本会把应用放进 `~/Applications/`，并注册每日自动清理的 launchd 任务。
+安装脚本会把 DMG 里的应用装进 `~/Applications/`，并注册每日自动清理的 launchd 任务。
+
+也可以直接下载 DMG 手动安装（把 app 拖进「应用程序」）：
+
+```bash
+npm pack trashkeeper-mac && open trashkeeper-mac-0.1.0.tgz
+```
 
 > 需要 macOS 10.13 或更高版本。
+>
+> 应用未做 Apple 公证（notarization），首次打开若提示「无法验证开发者」，
+> 请在弹窗里选「仍要打开」，或在「系统设置 → 隐私与安全性」里点「仍要打开」。
 
 ## 使用
 
@@ -53,9 +62,10 @@ git clone https://github.com/a395027720/trashkeeper-mac.git
 cd trashkeeper-mac/backend
 
 python3 -m venv .venv
-./.venv/bin/pip install pywebview pyinstaller
+./.venv/bin/pip install pywebview pyinstaller pillow
 ./.venv/bin/python build.py -t i   # 生成图标
 ./.venv/bin/python build.py -t p   # 打出 .app
+./.venv/bin/python build.py -t d   # 打成 DMG 安装包
 bash ../scripts/install.sh          # 安装并注册自动清理
 ```
 

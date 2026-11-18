@@ -11,13 +11,17 @@
     "pywebview",
     "cleanup"
   ],
-  "homepage": "https://github.com/fuck-baby/trashkeeper-mac#readme",
+  "homepage": "https://github.com/a395027720/trashkeeper-mac#readme",
+  "author": {
+    "name": "a395027720",
+    "email": "395027720@qq.com"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fuck-baby/trashkeeper-mac.git"
+    "url": "git+https://github.com/a395027720/trashkeeper-mac.git"
   },
   "bugs": {
-    "url": "https://github.com/fuck-baby/trashkeeper-mac/issues"
+    "url": "https://github.com/a395027720/trashkeeper-mac/issues"
   },
   "bin": {
     "trashkeeper": "bin/trashkeeper.js"

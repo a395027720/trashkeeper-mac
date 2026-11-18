@@ -49,7 +49,7 @@ npm uninstall -g trashkeeper-mac
 ## 从源码构建
 
 ```bash
-git clone https://github.com/fuck-baby/trashkeeper-mac.git
+git clone https://github.com/a395027720/trashkeeper-mac.git
 cd trashkeeper-mac/backend
 
 python3 -m venv .venv
